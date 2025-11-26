@@ -1,0 +1,51 @@
+services: 
+  app:
+    build: ./app/
+    image: career-prediction-app:latest
+    container_name: career-prediction-app
+    env_file:
+    - .env
+    depends_on:
+      - rabbitmq
+      - database
+    volumes:
+      - ./app:/app
+    restart: unless-stopped
+
+  web-proxy:
+    image: nginx:latest
+    container_name: career-prediction-web-proxy
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      # - ./nginx/ssl:/etc/nginx/ssl
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: career-prediction-rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: on-failure
+    
+  database:
+    image: postgres:15
+    container_name: career-prediction-database
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_USER}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  rabbitmq-data:
