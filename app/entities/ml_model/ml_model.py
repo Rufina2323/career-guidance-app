@@ -22,7 +22,3 @@ class MLModel(ABC):
     @abstractmethod
     def initialize_model(self) -> torch.nn.Module:
         pass
-
-    @abstractmethod
-    def predict(self, inference_data: InferenceData) -> Response:
-        pass

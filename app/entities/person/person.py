@@ -11,11 +11,3 @@ class Person(ABC):
     email: str
     password_hash: str
     balance: Balance
-
-    @abstractmethod
-    def check_password(self, password_hash: str) -> bool:
-        pass
-
-    @abstractmethod
-    def get_balance(self) -> float:
-        pass

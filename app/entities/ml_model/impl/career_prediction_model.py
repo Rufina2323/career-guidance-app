@@ -25,9 +25,3 @@ class CareerPredictionModel(MLModel):
 
     def initialize_preprocessing(self) -> dict:
         pass
-
-    def preprocess_inference_data(self, inference_data: InferenceData) -> InferenceData:
-        pass
-
-    def predict(self, inference_data: InferenceData) -> Response:
-        pass
