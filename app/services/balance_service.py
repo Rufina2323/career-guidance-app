@@ -13,9 +13,12 @@ class BalanceService:
         self.amount += amount
         return self.transaction_service.create_transaction(balance, amount)
 
-    def withdraw(self, amount: float) -> Transaction:
+    def can_withdraw(self, balance: Balance, amount: float) -> bool:
+        return 0 <= amount <= balance.amount
+
+    def withdraw(self, balance: Balance, amount: float) -> Transaction:
         if amount <= 0:
             raise ValueError("Withdrawal amount must be positive")
-        if amount > self.amount:
+        if amount > balance.amount:
             raise ValueError("Insufficient balance")
-        self.amount -= amount
+        balance.amount -= amount
