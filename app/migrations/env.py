@@ -5,9 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 from models import SQLModel
-from models import user, balance, deposit_transaction, ml_request_transaction, ml_model, ml_request, data
 
-from config.psql import POSTGRES_DB, POSTGRES_DB_URL, POSTGRES_PASSWORD, POSTGRES_USER
+from config.psql import POSTGRES_DB_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -62,7 +61,7 @@ def run_migrations_online() -> None:
 
     In this scenario we need to create an Engine
     and associate a connection with the context.
-    
+
     """
 
     connectable = engine_from_config(
@@ -72,9 +71,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
