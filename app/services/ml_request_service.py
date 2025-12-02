@@ -2,6 +2,7 @@ from entities.inference_data.inference_data import InferenceData
 from entities.ml_model.ml_model import MLModel
 from entities.ml_request import MLRequest
 from entities.person.impl.user import User
+from entities.response.response import Response
 from services.balance_service import BalanceService
 
 
@@ -16,3 +17,8 @@ class MLRequestService:
 
     def get_ml_request_history(self, user: User) -> list[MLRequest]:
         pass
+
+    def execute(self) -> Response:
+        """Run the prediction using the MLModel."""
+        self.result = self.ml_model.predict(self.input_data)
+        return self.result

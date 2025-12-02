@@ -2,4 +2,4 @@ from entities.response.response import Response
 
 
 class CareerPredictionModelResponse(Response):
-    pass
+    job_role_result: str

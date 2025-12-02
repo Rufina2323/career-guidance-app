@@ -16,8 +16,3 @@ class MLRequest:
     status: str
     timestamp: datetime = field(default_factory=datetime.now)
     credits_used: float = 0.0
-
-    def execute(self) -> Response:
-        """Run the prediction using the MLModel."""
-        self.result = self.ml_model.predict(self.input_data)
-        return self.result

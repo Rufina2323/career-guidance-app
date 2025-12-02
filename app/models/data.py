@@ -1,7 +1,13 @@
-from entities.inference_data.inference_data import InferenceData
+from typing import TYPE_CHECKING
+from sqlmodel import SQLModel, Field, Relationship
+import uuid
+
+if TYPE_CHECKING:
+    from models.ml_request import MLRequest
 
 
-class CareerPredictionModelInferenceData(InferenceData):
+class Data(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     operating_systems_percentage: int
     algorithms_percentage: int
     programming_concepts_percentage: int
@@ -38,3 +44,6 @@ class CareerPredictionModelInferenceData(InferenceData):
     worker_type: str
     team_work: str
     instrovert: bool
+    job_role_result: str
+
+    ml_request: "MLRequest" = Relationship(back_populates="data")
