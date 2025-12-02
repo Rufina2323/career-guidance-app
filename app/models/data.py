@@ -1,6 +1,9 @@
-from models.balance import Balance
+from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 import uuid
+
+if TYPE_CHECKING:
+    from models.ml_request import MLRequest
 
 
 class Data(SQLModel, table=True):
@@ -43,4 +46,4 @@ class Data(SQLModel, table=True):
     instrovert: bool
     job_role_result: str
 
-    ml_request: Balance = Relationship(back_populates="data")
+    ml_request: "MLRequest" = Relationship(back_populates="data")

@@ -1,8 +1,11 @@
 
+from typing import TYPE_CHECKING
 import uuid
 from sqlmodel import Field, Relationship, SQLModel
 
-from models.ml_request import MLRequest
+
+if TYPE_CHECKING:
+    from models.ml_request import MLRequest
 
 
 class MLModel(SQLModel, table=True):
@@ -14,4 +17,4 @@ class MLModel(SQLModel, table=True):
     model_path: str
     preprocessing_path: str
 
-    ml_request: MLRequest = Relationship(back_populates="ml_model")
+    ml_request: "MLRequest" = Relationship(back_populates="ml_model")
