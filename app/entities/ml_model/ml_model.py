@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from entities.inference_data.inference_data import InferenceData
-from entities.response.response import Response
 import torch
 
 

@@ -2,10 +2,8 @@ from dataclasses import dataclass, field
 
 import torch
 
-from entities.inference_data.inference_data import InferenceData
 
 from entities.ml_model.ml_model import MLModel
-from entities.response.response import Response
 
 
 @dataclass
