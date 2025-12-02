@@ -1,4 +1,3 @@
-
 from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -15,5 +14,9 @@ class Balance(SQLModel, table=True):
     amount: float = Field(default=0.0)
 
     user: "User" = Relationship(back_populates="balance")
-    deposit_transactions: list["DepositTransaction"] = Relationship(back_populates="balance")
-    ml_request_transactions: list["MLRequestTransaction"] = Relationship(back_populates="balance")
+    deposit_transactions: list["DepositTransaction"] = Relationship(
+        back_populates="balance"
+    )
+    ml_request_transactions: list["MLRequestTransaction"] = Relationship(
+        back_populates="balance"
+    )

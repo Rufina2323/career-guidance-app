@@ -1,4 +1,3 @@
-
 from typing import TYPE_CHECKING
 import uuid
 from sqlmodel import Field, Relationship, SQLModel

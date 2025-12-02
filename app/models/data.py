@@ -30,7 +30,7 @@ class Data(SQLModel, table=True):
     olympiads: str
     reading_writing_skills: str
     memory_capability_score: str
-    interested_subjects:str
+    interested_subjects: str
     interested_career_area: str
     Job_higher_studies: str
     company_type_prefered: str
