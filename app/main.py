@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from create_entites.person.impl.admin import AdminCreateEntity
+from create_entites.person.impl.user import UserCreateEntity
 from entities.person.impl.user import User
 from services.admin_service import AdminService
 from services.balance_service import BalanceService
@@ -26,6 +28,7 @@ balace_service = BalanceService()
 user_service = UserService()
 admin_service = AdminService()
 transaction_service = TransactionService()
+
 
 @app.get("/", response_model=dict[str, str])
 async def index() -> dict[str, str]:
@@ -54,6 +57,25 @@ async def health_check() -> dict[str, str]:
     """
     logger.info("Эндпоинт health_check успешно вызван")
     return {"status": "healthy"}
+
+
+@app.post("/demo")
+def demo() -> None:
+    user_create_entity = UserCreateEntity(
+        username="Anton", email="example123@gmail.com", password="hard_password"
+    )
+    user = user_service.add_person(user_create_entity)
+
+    admin_create_entity = AdminCreateEntity(
+        username="Galina", email="blanka@gmail.com", password="tasty_soup"
+    )
+    admin_service.add_person(admin_create_entity)
+
+    admin_service.deposit_to_user(user, 600)
+
+    user = user_service.get_person(user.user_id)
+
+    assert user.balance.amount == 600
 
 
 # Обработчики ошибок
