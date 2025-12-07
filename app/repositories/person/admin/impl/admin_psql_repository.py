@@ -1,4 +1,4 @@
-from create_entites.person.impl.admin import AdminCreateEntity
+from create_entites.person_db.impl.admin import AdminDBCreateEntity
 from entities.balance import Balance
 from entities.person.impl.admin import Admin
 from entities.person.impl.user import User
@@ -9,7 +9,6 @@ from models.ml_request_transaction import (
     MLRequestTransaction as MLRequestTransactionModel,  # noqa: F401
 )
 from models.user import Role, User as UserModel
-import bcrypt
 
 from sqlmodel import Session, select
 from database.engine import engine
@@ -25,19 +24,15 @@ class AdminPSQLRepository(AdminRepository, PersonPSQLRepository):
             psql_user.balance.amount += amount
             session.commit()
 
-    def add_person(self, admin_create_entity: AdminCreateEntity) -> Admin:
-        password_hash = bcrypt.hashpw(
-            admin_create_entity.password.encode(), bcrypt.gensalt()
-        )
-
+    def add_person(self, admin_db_create_entity: AdminDBCreateEntity) -> Admin:
         balance_model = BalanceModel(
             amount=0,
         )
 
         user_model = UserModel(
-            username=admin_create_entity.username,
-            email=admin_create_entity.email,
-            password_hash=password_hash,
+            username=admin_db_create_entity.username,
+            email=admin_db_create_entity.email,
+            password_hash=admin_db_create_entity.password_hash,
             balance=balance_model,
             role=Role.ADMIN,
         )
@@ -51,7 +46,7 @@ class AdminPSQLRepository(AdminRepository, PersonPSQLRepository):
                 user_id=user_model.id,
                 username=user_model.username,
                 email=user_model.email,
-                password_hash=password_hash,
+                password_hash=user_model.password_hash,
                 balance=Balance(
                     amount=balance_model.amount,
                 ),
