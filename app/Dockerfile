@@ -20,10 +20,11 @@ COPY uv.lock .
 
 RUN uv sync
 
+COPY migrations .
 COPY entities .
 COPY services .
 COPY main.py .
 
 EXPOSE 8080
 
-CMD ["uv", "run", "python", "main.py"]
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run python main.py"]
