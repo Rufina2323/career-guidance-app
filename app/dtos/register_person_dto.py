@@ -12,4 +12,3 @@ class RegisterPersonDTO(BaseModel):
     password: str
     email: str
     role: RegisterRole
-    
