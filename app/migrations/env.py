@@ -5,6 +5,16 @@ from sqlalchemy import pool
 
 from alembic import context
 from models import SQLModel
+from models import (
+    balance,
+    person,
+    inference_data,
+    response_data,
+    ml_model,
+    deposit_transaction,
+    ml_request,
+    ml_request_transaction,
+)
 
 from config.psql import POSTGRES_DB_URL
 

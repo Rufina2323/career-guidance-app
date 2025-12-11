@@ -4,6 +4,4 @@ from abc import abstractmethod
 
 
 class AdminRepository(PersonRepository):
-    @abstractmethod
-    def deposit_to_user(self, user: User, amount: float) -> None:
-        raise NotImplementedError
+    pass

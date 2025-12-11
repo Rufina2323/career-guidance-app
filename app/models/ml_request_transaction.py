@@ -6,6 +6,7 @@ from sqlalchemy import ForeignKey, Column, UUID as SA_UUID
 
 if TYPE_CHECKING:
     from models.balance import Balance
+    from models.ml_request import MLRequest
 
 
 class MLRequestTransaction(SQLModel, table=True):
@@ -22,3 +23,4 @@ class MLRequestTransaction(SQLModel, table=True):
     )
 
     balance: "Balance" = Relationship(back_populates="ml_request_transactions")
+    ml_request: "MLRequest" = Relationship(back_populates="ml_request_transaction")

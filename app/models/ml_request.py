@@ -4,10 +4,11 @@ from sqlmodel import SQLModel, Field, Relationship
 import uuid
 from sqlalchemy import ForeignKey, Column, UUID as SA_UUID
 
-if TYPE_CHECKING:
-    from models.data import Data
-    from models.user import User
-    from models.ml_model import MLModel
+from models.inference_data import InferenceData
+from models.person import Person
+from models.ml_request_transaction import MLRequestTransaction
+from models.response_data import ResponseData
+from models.ml_model import MLModel
 
 
 class MLRequest(SQLModel, table=True):
@@ -19,15 +20,27 @@ class MLRequest(SQLModel, table=True):
     credits_used: float = Field(default=0.0)
 
     user_id: uuid.UUID = Field(
-        sa_column=Column(SA_UUID, ForeignKey("user.id", name="fk_user_id"))
+        sa_column=Column(SA_UUID, ForeignKey("person.id", name="fk_person_id"))
     )
     ml_model_id: uuid.UUID = Field(
         sa_column=Column(SA_UUID, ForeignKey("ml_model.id", name="fk_ml_model_id"))
     )
-    data_id: uuid.UUID = Field(
-        sa_column=Column(SA_UUID, ForeignKey("data.id", name="fk_ml_data_id"))
+    inference_data_id: uuid.UUID = Field(
+        sa_column=Column(
+            SA_UUID, ForeignKey("inference_data.id", name="fk_inference_data_id")
+        )
     )
 
-    user: "User" = Relationship(back_populates="ml_request")
-    ml_model: "MLModel" = Relationship(back_populates="ml_request")
-    data: "Data" = Relationship(back_populates="ml_request")
+    response_data_id: uuid.UUID = Field(
+        sa_column=Column(
+            SA_UUID, ForeignKey("response_data.id", name="fk_response_data_id")
+        )
+    )
+
+    person: "Person" = Relationship(back_populates="ml_requests")
+    ml_model: "MLModel" = Relationship(back_populates="ml_requests")
+    inference_data: "InferenceData" = Relationship(back_populates="ml_request")
+    response_data: "ResponseData" = Relationship(back_populates="ml_request")
+    ml_request_transaction: "MLRequestTransaction" = Relationship(
+        back_populates="ml_request"
+    )

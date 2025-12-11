@@ -1,24 +1,51 @@
-from entities.inference_data.inference_data import InferenceData
-from entities.ml_model.ml_model import MLModel
+import uuid
+from create_entites.inference_data.inference_data import InferenceDataCreateEntity
 from entities.ml_request import MLRequest
-from entities.person.impl.user import User
-from entities.response.response import Response
+from repositories.ml_request.impl.ml_request_psql_repository import (
+    MLRequestPSQLRepository,
+)
+from repositories.ml_request.repository import MLRequestRepository
 from services.balance_service import BalanceService
+from services.inference_data_service import InferenceDataService
+from services.ml_model_service import MLModelService
+from services.response_data_service import ResponseDataService
 
 
 class MLRequestService:
     def __init__(self) -> None:
         self.balance_service = BalanceService()
+        self.ml_model_service = MLModelService()
+        self.inference_data_service = InferenceDataService()
+        self.response_data_service = ResponseDataService()
+        self.ml_request_repository: MLRequestRepository = MLRequestPSQLRepository()
 
     def create_ml_request(
-        self, user: User, model: MLModel, input_data: InferenceData
-    ) -> MLRequest:
-        pass
+        self,
+        user_id: uuid.UUID,
+        balance_id: uuid.UUID,
+        model_id: uuid.UUID,
+        inference_data: InferenceDataCreateEntity,
+    ) -> uuid.UUID:
+        model_cost = self.ml_model_service.get_model_cost(model_id)
+        self.balance_service.can_withdraw(balance_id, model_cost)
 
-    def get_ml_request_history(self, user: User) -> list[MLRequest]:
-        pass
+        inference_data_id = self.inference_data_service.add_data(inference_data)
+        response_data = self.ml_model_service.predict(model_id, inference_data)
+        repsonse_data_id = self.response_data_service.add_data(response_data)
 
-    def execute(self) -> Response:
-        """Run the prediction using the MLModel."""
-        self.result = self.ml_model.predict(self.input_data)
-        return self.result
+        ml_request_id = self.ml_request_repository.create_ml_request(
+            model_cost, user_id, model_id, inference_data_id, repsonse_data_id
+        )
+
+        self.balance_service.withdraw(ml_request_id, balance_id, model_cost)
+
+        return ml_request_id
+
+    def get_ml_request_history(self, user_id: uuid.UUID) -> list[MLRequest]:
+        ml_requests = self.ml_request_repository.get_ml_request_history(
+            user_id
+        )  # key= lambda t: t.timestamp, reverse=True)
+
+        ml_requests.sort(key=lambda ml_request: ml_request.timestamp, reverse=True)
+
+        return ml_requests

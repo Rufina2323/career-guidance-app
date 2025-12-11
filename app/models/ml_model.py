@@ -16,4 +16,4 @@ class MLModel(SQLModel, table=True):
     model_path: str
     preprocessing_path: str
 
-    ml_request: "MLRequest" = Relationship(back_populates="ml_model")
+    ml_requests: list["MLRequest"] = Relationship(back_populates="ml_model")

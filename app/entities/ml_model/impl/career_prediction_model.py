@@ -8,7 +8,7 @@ from entities.ml_model.ml_model import MLModel
 
 @dataclass
 class CareerPredictionModel(MLModel):
-    preprocessing_paths: list[str]
+    preprocessing_path: str
     preprocessing_pipeline: dict = field(init=False)
 
     def __post_init__(self) -> None:
