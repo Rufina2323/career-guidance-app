@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 
-from create_entites.person.person import PersonCreateEntity
+from create_entites.person_db.person import PersonDBCreateEntity
 
 
 @dataclass
-class UserDBCreateEntity(PersonCreateEntity):
+class UserDBCreateEntity(PersonDBCreateEntity):
     pass
