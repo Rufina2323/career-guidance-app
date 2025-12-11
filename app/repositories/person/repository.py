@@ -13,7 +13,11 @@ class PersonRepository(ABC):
     @abstractmethod
     def get_person(self, person_id: uuid.UUID) -> Person | None:
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_by_username(self, username: str) -> Person | None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_user_balance_id(self, person_id: uuid.UUID) -> uuid.UUID | None:
         raise NotImplementedError

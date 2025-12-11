@@ -6,21 +6,45 @@ from models.deposit_transaction import DepositTransaction as DepositTransactionM
 from models.ml_request_transaction import (
     MLRequestTransaction as MLRequestTransactionModel,  # noqa: F401
 )
-from models.user import User as UserModel
+from models.person import Role, Person as PersonModel
 
-from sqlmodel import Session
+import uuid
+from sqlalchemy.exc import NoResultFound
+
+from sqlmodel import Session, select
 from database.engine import engine
 from repositories.person.impl.person_psql_repository import PersonPSQLRepository
 from repositories.person.user.user_repository import UserRepository
 
 
 class UserPSQLRepository(UserRepository, PersonPSQLRepository):
+    def get_person(self, person_id: uuid.UUID) -> User | None:
+        statement = (
+            select(PersonModel)
+            .where(PersonModel.id == person_id)
+            .where(PersonModel.role == Role.USER)
+        )
+        with Session(engine) as session:
+            try:
+                psql_user = session.exec(statement).one()
+                return User(
+                    user_id=psql_user.id,
+                    username=psql_user.username,
+                    email=psql_user.email,
+                    password_hash=psql_user.password_hash,
+                    balance=Balance(
+                        amount=psql_user.balance.amount,
+                    ),
+                )
+            except NoResultFound:
+                return None
+
     def add_person(self, user_db_create_entity: UserDBCreateEntity) -> User:
         balance_model = BalanceModel(
             amount=0,
         )
 
-        user_model = UserModel(
+        user_model = PersonModel(
             username=user_db_create_entity.username,
             email=user_db_create_entity.email,
             password_hash=user_db_create_entity.password_hash,
