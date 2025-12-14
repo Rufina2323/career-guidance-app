@@ -3,5 +3,5 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Response(ABC):
+class InferenceDataCreateEntity(ABC):
     pass

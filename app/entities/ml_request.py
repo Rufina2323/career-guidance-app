@@ -4,15 +4,14 @@ from datetime import datetime
 from entities.inference_data.inference_data import InferenceData
 from entities.ml_model.ml_model import MLModel
 from entities.person.person import Person
-from entities.response.response import Response
+from entities.response_data.response_data import ResponseData
 
 
 @dataclass
 class MLRequest:
-    user: Person
+    person: Person
     ml_model: MLModel
-    input_data: InferenceData
-    result: Response
+    inference_data: InferenceData
+    response_data: ResponseData
     status: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    credits_used: float = 0.0
+    timestamp: datetime

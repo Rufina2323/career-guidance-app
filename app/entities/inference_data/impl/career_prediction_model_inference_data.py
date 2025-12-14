@@ -1,6 +1,8 @@
+from dataclasses import dataclass
 from entities.inference_data.inference_data import InferenceData
 
 
+@dataclass(kw_only=True)
 class CareerPredictionModelInferenceData(InferenceData):
     operating_systems_percentage: int
     algorithms_percentage: int
@@ -20,13 +22,13 @@ class CareerPredictionModelInferenceData(InferenceData):
     extra_courses_did: str
     certifications: str
     workshops: str
-    talenttests_taken: str
+    talent_tests_taken: str
     olympiads: str
     reading_writing_skills: str
     memory_capability_score: str
     interested_subjects: str
     interested_career_area: str
-    Job_higher_studies: str
+    job_higher_studies: str
     company_type_prefered: str
     taken_inputs_from_elders: str
     interested_in_games: str

@@ -1,8 +1,8 @@
-"""Add ml_model model
+"""Add ml model model
 
-Revision ID: 688909dcb3c0
-Revises: c7f5cfee7ec3
-Create Date: 2025-12-02 15:56:01.453804
+Revision ID: 46baad9e7249
+Revises: 6c1f81603d9e
+Create Date: 2025-12-11 18:10:39.698019
 
 """
 
@@ -15,8 +15,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "688909dcb3c0"
-down_revision: Union[str, Sequence[str], None] = "c7f5cfee7ec3"
+revision: str = "46baad9e7249"
+down_revision: Union[str, Sequence[str], None] = "6c1f81603d9e"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
