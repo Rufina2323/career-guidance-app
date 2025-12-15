@@ -12,15 +12,29 @@ from models.response_data import ResponseData as ResponseDataModel
 
 
 class ResponseDataPSQLRepository(ResponseDataRepository):
-    def add_data(self, response_data: CareerPredictionModelResponseData) -> uuid.UUID:
-        response_data_model = ResponseDataModel(
-            job_role_result=response_data.job_role_result
-        )
-
+    def add_data(
+        self,
+        response_data_id: uuid.UUID,
+        response_data: CareerPredictionModelResponseData,
+    ) -> uuid.UUID:
         with Session(engine) as session:
-            session.add(response_data_model)
+            statement = select(ResponseDataModel).where(
+                ResponseDataModel.id == response_data_id
+            )
+            existing = session.exec(statement).first()
+
+            if existing:
+                # Update existing row
+                existing.job_role_result = response_data.job_role_result
+            else:
+                # Insert new row
+                existing = ResponseDataModel(
+                    id=response_data_id, job_role_result=response_data.job_role_result
+                )
+                session.add(existing)
+
             session.commit()
-            return response_data_model.id
+            return existing.id
 
     def get_data(self, response_data_id: uuid.UUID) -> ResponseData | None:
         with Session(engine) as session:

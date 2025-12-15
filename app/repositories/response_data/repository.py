@@ -6,7 +6,9 @@ from entities.response_data.response_data import ResponseData
 
 class ResponseDataRepository(ABC):
     @abstractmethod
-    def add_data(self, response_data: ResponseData) -> uuid.UUID:
+    def add_data(
+        self, response_data_id: uuid.UUID, response_data: ResponseData
+    ) -> uuid.UUID:
         raise NotImplementedError
 
     @abstractmethod
