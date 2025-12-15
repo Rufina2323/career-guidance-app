@@ -14,6 +14,7 @@ services:
       - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_DB=${POSTGRES_DB}
+      - RABBITMQ_HOST=rabbitmq
     volumes:
       - ./app:/app
     restart: unless-stopped
@@ -33,12 +34,34 @@ services:
       # - ./nginx/ssl:/etc/nginx/ssl
     restart: unless-stopped
 
+  worker:
+    build: ./app/
+    image: career-prediction-worker:latest
+    command: uv run python -u worker.py
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+      - POSTGRES_HOST=database
+      - POSTGRES_PORT=5432
+    volumes:
+      - ./app:/app
+    restart: unless-stopped
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: career-prediction-rabbitmq
     ports:
       - "15672:15672"
       - "5672:5672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
     restart: on-failure
