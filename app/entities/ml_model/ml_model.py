@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import torch
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MLModel(ABC):
     model_id: int
     name: str
@@ -12,10 +12,7 @@ class MLModel(ABC):
     model: torch.nn.Module = field(init=False)
 
     def __post_init__(self) -> None:
-        try:
-            self.model = self.initialize_model()
-        except Exception:
-            self.model = None
+        self.model = self.initialize_model()
 
     @abstractmethod
     def initialize_model(self) -> torch.nn.Module:
