@@ -34,6 +34,17 @@ services:
       # - ./nginx/ssl:/etc/nginx/ssl
     restart: unless-stopped
 
+  streamlit:
+    build: ./streamlit_app
+    image: career-prediction-streamlit:latest
+    container_name: career-prediction-streamlit
+    depends_on:
+      - app
+    environment:
+      - BACKEND_URL=http://app:8080
+      - STREAMLIT_SERVER_BASE_URL=/streamlit/
+    restart: unless-stopped
+
   worker:
     build: ./app/
     image: career-prediction-worker:latest
