@@ -19,6 +19,9 @@ from repositories.transaction.impl.transaction_psql_repository import (
 class DepositTransactionPSQLRepository(
     DepositTransactionRepository, TransactionPSQLRepository
 ):
+    def __init__(self):
+        self.session_maker = Session
+
     def create_transaction(self, balance_id: uuid.UUID, amount: float) -> None:
         deposit_transaction_model = DepositTransactionModel(
             amount=amount,
@@ -26,7 +29,7 @@ class DepositTransactionPSQLRepository(
             balance_id=balance_id,
         )
 
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             session.add(deposit_transaction_model)
             session.commit()
 
@@ -34,7 +37,7 @@ class DepositTransactionPSQLRepository(
         statement = select(DepositTransactionModel).where(
             DepositTransactionModel.balance_id == balance_id
         )
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             psql_deposit_transactions = session.exec(statement).all()
             deposit_transactions = []
             for tx in psql_deposit_transactions:

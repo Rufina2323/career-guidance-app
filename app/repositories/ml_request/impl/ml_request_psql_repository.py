@@ -16,6 +16,9 @@ from models.inference_data import InferenceData as InferenceDataModel
 
 
 class MLRequestPSQLRepository(MLRequestRepository):
+    def __init__(self):
+        self.session_maker = Session
+
     def create_ml_request(
         self,
         model_cost: float,
@@ -34,13 +37,13 @@ class MLRequestPSQLRepository(MLRequestRepository):
             response_data_id=repsonse_data_id,
         )
 
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             session.add(ml_request_model)
             session.commit()
             return ml_request_model.id
 
     def change_ml_request_status(self, ml_request_id: uuid.UUID, ml_request_status: Status) -> None:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             psql_ml_request.status = ml_request_status
@@ -48,31 +51,31 @@ class MLRequestPSQLRepository(MLRequestRepository):
             session.commit()
 
     def get_prediction_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.response_data_id
         
     def get_ml_request_status(self, ml_request_id: uuid.UUID) -> Status:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.status
         
     def get_ml_request_cost(self, ml_request_id: uuid.UUID) -> float:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.credits_used
 
     def get_user_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.user_id
 
     def get_ml_request_history(self, user_id: uuid.UUID) -> list[MLRequest]:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.user_id == user_id)
             psql_ml_requests = session.exec(statement).all()
             ml_requests = []

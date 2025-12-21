@@ -10,6 +10,9 @@ from repositories.inference_data.repository import InferenceDataRepository
 
 
 class InferenceDataPSQLRepository(InferenceDataRepository):
+    def __init__(self):
+        self.session_maker = Session
+        
     def add_data(self, inference_data: InferenceDataCreateEntity) -> uuid.UUID:
         # TODO: add all data
         inference_data_model = InferenceDataModel(
@@ -51,13 +54,13 @@ class InferenceDataPSQLRepository(InferenceDataRepository):
             instrovert=True,
         )
 
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             session.add(inference_data_model)
             session.commit()
             return inference_data_model.id
 
     def get_data(self, inference_data_id: uuid.UUID) -> InferenceData | None:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 statement = select(InferenceDataModel).where(
                     InferenceDataModel.id == inference_data_id

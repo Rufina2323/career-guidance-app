@@ -27,6 +27,9 @@ from repositories.transaction.ml_request_transaction.ml_request_transaction_repo
 class MLRequestTransactionPSQLRepository(
     MLRequestTransactionRepository, TransactionPSQLRepository
 ):
+    def __init__(self):
+        self.session_maker = Session
+
     def create_transaction(
         self, ml_request_id: uuid.UUID, balance_id: uuid.UUID, amount: float
     ) -> None:
@@ -37,7 +40,7 @@ class MLRequestTransactionPSQLRepository(
             balance_id=balance_id,
         )
 
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             session.add(ml_request_transaction_model)
             session.commit()
 
@@ -45,7 +48,7 @@ class MLRequestTransactionPSQLRepository(
         statement = select(MLRequestTransactionModel).where(
             MLRequestTransactionModel.balance_id == balance_id
         )
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             psql_ml_request_transactions = session.exec(statement).all()
             ml_request_transactions = []
             for tx in psql_ml_request_transactions:

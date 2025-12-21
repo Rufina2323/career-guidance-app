@@ -18,13 +18,16 @@ from repositories.person.user.user_repository import UserRepository
 
 
 class UserPSQLRepository(UserRepository, PersonPSQLRepository):
+    def __init__(self):
+        self.session_maker = Session
+
     def get_person(self, person_id: uuid.UUID) -> User | None:
         statement = (
             select(PersonModel)
             .where(PersonModel.id == person_id)
             .where(PersonModel.role == Role.USER)
         )
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 psql_user = session.exec(statement).one()
                 return User(
@@ -51,7 +54,7 @@ class UserPSQLRepository(UserRepository, PersonPSQLRepository):
             balance=balance_model,
         )
 
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             session.add(balance_model)
             session.add(user_model)
             session.commit()
