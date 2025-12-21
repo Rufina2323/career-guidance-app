@@ -9,12 +9,13 @@ from dtos.inference_data_dto import InferenceDataDTO
 from dtos.update_balance_dto import UpdateBalanceDTO
 from dtos.token import Token
 from dtos.register_person_dto import RegisterPersonDTO, RegisterRole
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.responses import JSONResponse
 
 from create_entites.person.impl.admin import AdminCreateEntity
 from create_entites.person.impl.user import UserCreateEntity
 from entities.person.impl.user import User
+from models.ml_request import Status
 from services.admin_service import AdminService
 from services.balance_service import BalanceService
 from services.ml_request_service import MLRequestService
@@ -23,6 +24,8 @@ import logging
 
 from services.transaction_service import TransactionService
 from services.user_service import UserService
+
+from config.rabbitmq import RABBITMQ_QUEUE
 
 from jose import jwt, JWTError
 from starlette import status
@@ -284,7 +287,7 @@ def create_ml_request(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     publish(
-        queue="ml_requests",
+        queue=RABBITMQ_QUEUE,
         message={
             "request_id": str(ml_request_id),
             "ml_model_id": str(ml_model_id),
@@ -302,11 +305,14 @@ def get_prediction(user: user_dependency, ml_request_id: uuid.UUID) -> None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User does not have access."
         )
-    prediction = ml_request_service.get_prediction(ml_request_id)
-    if prediction.job_role_result == "":
-        raise HTTPException(status_code=404, detail="Prediction not ready or not found")
+    ml_request_status = ml_request_service.get_ml_request_status(ml_request_id)
+    if ml_request_status == Status.FAILED:
+        raise HTTPException(status_code=404, detail="Prediction failed")
+    
+    if ml_request_status == Status.RUNNING or ml_request_status == Status.QUEUED:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-    ml_request_service.finish_ml_request(ml_request_id=ml_request_id)
+    prediction = ml_request_service.get_prediction(ml_request_id)
     return {"prediction": prediction.job_role_result}
 
 
