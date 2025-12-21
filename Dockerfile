@@ -20,10 +20,10 @@ COPY uv.lock .
 
 RUN uv sync
 
-COPY migrations .
-COPY entities .
-COPY services .
-COPY main.py .
+COPY app/migrations .
+COPY app/entities .
+COPY app/services .
+COPY app/main.py .
 
 EXPOSE 8080
 
