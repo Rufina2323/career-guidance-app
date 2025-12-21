@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 import uuid
@@ -12,11 +13,19 @@ if TYPE_CHECKING:
     from models.ml_model import MLModel
 
 
+
+class Status(str, Enum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    
+
 class MLRequest(SQLModel, table=True):
     __tablename__ = "ml_request"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    status: str
+    status: Status = Field(default=Status.QUEUED)
     timestamp: datetime
     credits_used: float = Field(default=0.0)
 
