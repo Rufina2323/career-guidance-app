@@ -10,8 +10,11 @@ from sqlalchemy.exc import NoResultFound
 
 
 class MLModelPSQLRepository(MLModelRepository):
+    def __init__(self):
+        self.session_maker = Session
+
     def get_ml_model_request_cost(self, ml_model_id: uuid.UUID) -> float | None:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 statement = select(MLModelModel).where(MLModelModel.id == ml_model_id)
                 psql_ml_model = session.exec(statement).one()
@@ -21,7 +24,7 @@ class MLModelPSQLRepository(MLModelRepository):
                 return None
 
     def get_ml_model(self, ml_model_id: uuid.UUID) -> MLModel:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 statement = select(MLModelModel).where(MLModelModel.id == ml_model_id)
                 psql_ml_model = session.exec(statement).one()

@@ -10,12 +10,15 @@ from models.person import Person as PersonModel
 
 
 class PersonPSQLRepository(PersonRepository):
+    def __init__(self):
+        self.session_maker = Session
+
     def add_person(self, person_db_create_entity: PersonDBCreateEntity) -> Person:
         raise NotImplementedError
 
     def get_by_username(self, username: str) -> Person | None:
         statement = select(PersonModel).where(PersonModel.username == username)
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 psql_user = session.exec(statement).one()
                 return Person(
@@ -35,7 +38,7 @@ class PersonPSQLRepository(PersonRepository):
 
     def get_user_balance_id(self, person_id: uuid.UUID) -> uuid.UUID | None:
         statement = select(PersonModel).where(PersonModel.id == person_id)
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 psql_user = session.exec(statement).one()
                 return psql_user.balance_id

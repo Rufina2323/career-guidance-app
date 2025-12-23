@@ -12,12 +12,15 @@ from models.response_data import ResponseData as ResponseDataModel
 
 
 class ResponseDataPSQLRepository(ResponseDataRepository):
+    def __init__(self):
+        self.session_maker = Session
+
     def add_data(
         self,
         response_data_id: uuid.UUID,
         response_data: CareerPredictionModelResponseData,
     ) -> uuid.UUID:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             statement = select(ResponseDataModel).where(
                 ResponseDataModel.id == response_data_id
             )
@@ -37,7 +40,7 @@ class ResponseDataPSQLRepository(ResponseDataRepository):
             return existing.id
 
     def get_data(self, response_data_id: uuid.UUID) -> ResponseData | None:
-        with Session(engine) as session:
+        with self.session_maker(engine) as session:
             try:
                 statement = select(ResponseDataModel).where(
                     ResponseDataModel.id == response_data_id
