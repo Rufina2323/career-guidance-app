@@ -1,1 +1,9 @@
 from sqlmodel import SQLModel  # noqa: F401
+from models.ml_model import MLModel  # noqa: F401
+from models.ml_request import MLRequest  # noqa: F401
+from models.person import Person  # noqa: F401
+from models.inference_data import InferenceData  # noqa: F401
+from models.response_data import ResponseData  # noqa: F401
+from models.ml_request_transaction import MLRequestTransaction  # noqa: F401
+from models.balance import Balance  # noqa: F401
+from models.deposit_transaction import DepositTransaction  # noqa: F401

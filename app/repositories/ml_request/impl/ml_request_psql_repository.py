@@ -3,7 +3,7 @@ import uuid
 from sqlmodel import Session, select
 from database.engine import engine
 from entities.ml_request import MLRequest
-from models.ml_request import MLRequest as MLRequestModel
+from models.ml_request import MLRequest as MLRequestModel, Status
 
 from repositories.ml_request.repository import MLRequestRepository
 
@@ -25,7 +25,7 @@ class MLRequestPSQLRepository(MLRequestRepository):
         repsonse_data_id: uuid.UUID,
     ) -> uuid.UUID:
         ml_request_model = MLRequestModel(
-            status="created",
+            status=Status.QUEUED,
             timestamp=datetime.datetime.now(),
             credits_used=model_cost,
             user_id=user_id,
@@ -38,6 +38,38 @@ class MLRequestPSQLRepository(MLRequestRepository):
             session.add(ml_request_model)
             session.commit()
             return ml_request_model.id
+
+    def change_ml_request_status(self, ml_request_id: uuid.UUID, ml_request_status: Status) -> None:
+        with Session(engine) as session:
+            statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
+            psql_ml_request = session.exec(statement).first()
+            psql_ml_request.status = ml_request_status
+            psql_ml_request.timestamp = datetime.datetime.now()
+            session.commit()
+
+    def get_prediction_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
+        with Session(engine) as session:
+            statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
+            psql_ml_request = session.exec(statement).first()
+            return psql_ml_request.response_data_id
+        
+    def get_ml_request_status(self, ml_request_id: uuid.UUID) -> Status:
+        with Session(engine) as session:
+            statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
+            psql_ml_request = session.exec(statement).first()
+            return psql_ml_request.status
+        
+    def get_ml_request_cost(self, ml_request_id: uuid.UUID) -> float:
+        with Session(engine) as session:
+            statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
+            psql_ml_request = session.exec(statement).first()
+            return psql_ml_request.credits_used
+
+    def get_user_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
+        with Session(engine) as session:
+            statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
+            psql_ml_request = session.exec(statement).first()
+            return psql_ml_request.user_id
 
     def get_ml_request_history(self, user_id: uuid.UUID) -> list[MLRequest]:
         with Session(engine) as session:
@@ -52,6 +84,7 @@ class MLRequestPSQLRepository(MLRequestRepository):
                     request_cost=ml_request.ml_model.request_cost,
                     model_path=ml_request.ml_model.model_path,
                     preprocessing_path=ml_request.ml_model.preprocessing_path,
+                    label_encoder_path=ml_request.ml_model.label_encoder_path,
                 )
                 inference_data = InferenceDataModel.to_domain(ml_request.inference_data)
                 response_data = CareerPredictionModelResponseData(

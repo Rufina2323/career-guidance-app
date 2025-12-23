@@ -12,8 +12,10 @@ class ResponseDataService:
             ResponseDataPSQLRepository()
         )
 
-    def add_data(self, response_data: ResponseData) -> uuid.UUID:
-        return self.response_data_repository.add_data(response_data)
+    def add_data(
+        self, repsonse_data_id: uuid.UUID, response_data: ResponseData
+    ) -> uuid.UUID:
+        return self.response_data_repository.add_data(repsonse_data_id, response_data)
 
     def get_data(self, response_data_id: uuid.UUID) -> ResponseData:
         return self.response_data_repository.get_data(response_data_id)

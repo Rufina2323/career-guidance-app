@@ -56,6 +56,7 @@ class MLRequestTransactionPSQLRepository(
                     request_cost=tx.ml_request.ml_model.request_cost,
                     model_path=tx.ml_request.ml_model.model_path,
                     preprocessing_path=tx.ml_request.ml_model.preprocessing_path,
+                    label_encoder_path=tx.ml_request.ml_model.label_encoder_path,
                 )
                 inference_data = InferenceDataModel.to_domain(
                     tx.ml_request.inference_data

@@ -5,16 +5,17 @@ import uuid
 from create_entites.inference_data.impl.career_prediction_model_inference_data import (
     CareerPredictionModelInferenceDataCreateEntity,
 )
-from dtos.inference_data_dto import InderenceDataDTO
+from dtos.inference_data_dto import InferenceDataDTO
 from dtos.update_balance_dto import UpdateBalanceDTO
 from dtos.token import Token
 from dtos.register_person_dto import RegisterPersonDTO, RegisterRole
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.responses import JSONResponse
 
 from create_entites.person.impl.admin import AdminCreateEntity
 from create_entites.person.impl.user import UserCreateEntity
 from entities.person.impl.user import User
+from models.ml_request import Status
 from services.admin_service import AdminService
 from services.balance_service import BalanceService
 from services.ml_request_service import MLRequestService
@@ -24,9 +25,12 @@ import logging
 from services.transaction_service import TransactionService
 from services.user_service import UserService
 
+from config.rabbitmq import RABBITMQ_QUEUE
+
 from jose import jwt, JWTError
 from starlette import status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from messaging.rabbitmq import publish
 
 import os
 from dotenv import load_dotenv
@@ -154,35 +158,6 @@ def update_balance(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@app.post("/ml_request")
-def create_ml_request(
-    user: user_dependency, model_id: uuid.UUID, input_data: InderenceDataDTO
-) -> None:
-    user_id = uuid.UUID(user["user_id"])
-    input_data_create_entity = CareerPredictionModelInferenceDataCreateEntity(
-        operating_systems_percentage=input_data.operating_systems_percentage,
-        algorithms_percentage=input_data.algorithms_percentage,
-        programming_concepts_percentage=input_data.programming_concepts_percentage,
-        software_engineering_percentage=input_data.software_engineering_percentage,
-    )
-
-    balance_id = user_service.get_user_balance_id(user_id)
-    if not balance_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Balance does not exist."
-        )
-
-    try:
-        ml_request_service.create_ml_request(
-            user_id,
-            balance_id,
-            model_id,
-            input_data_create_entity,
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-
 def get_transaction_history(user_id: uuid.UUID) -> list[str]:
     user = user_service.get_person(user_id)
     if not user:
@@ -246,6 +221,99 @@ def get_ml_request_history(user: user_dependency) -> list[str]:
 
         result.append(ml_request_string)
     return result
+
+
+@app.post("/ml_request")
+def create_ml_request(
+    user: user_dependency, payload: InferenceDataDTO, ml_model_id: uuid.UUID
+):
+    user_id = uuid.UUID(user["user_id"])
+    balance_id = user_service.get_user_balance_id(user_id)
+    if not balance_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Balance does not exist."
+        )
+
+    input_data_create_entity = CareerPredictionModelInferenceDataCreateEntity(
+        operating_systems_percentage=payload.operating_systems_percentage,
+        algorithms_percentage=payload.algorithms_percentage,
+        programming_concepts_percentage=payload.programming_concepts_percentage,
+        software_engineering_percentage=payload.software_engineering_percentage,
+        electronics_subjects_percentage=payload.electronics_subjects_percentage,
+        computer_architecture_percentage=payload.computer_architecture_percentage,
+        mathematics_percentage=payload.mathematics_percentage,
+        communication_skills_percentage=payload.communication_skills_percentage,
+        hours_working_per_day=payload.hours_working_per_day,
+        logical_quotient_rating=payload.logical_quotient_rating,
+        hackathons=payload.hackathons,
+        coding_skills_rating=payload.coding_skills_rating,
+        public_speaking_points=payload.public_speaking_points,
+        can_work_long_time=payload.can_work_long_time,
+        self_learning_capability=payload.self_learning_capability,
+        extra_courses_did=payload.extra_courses_did,
+        certifications=payload.certifications,
+        workshops=payload.workshops,
+        talent_tests_taken=payload.talent_tests_taken,
+        olympiads=payload.olympiads,
+        reading_writing_skills=payload.reading_writing_skills,
+        memory_capability_score=payload.memory_capability_score,
+        interested_subjects=payload.interested_subjects,
+        interested_career_area=payload.interested_career_area,
+        job_higher_studies=payload.job_higher_studies,
+        company_type_prefered=payload.company_type_prefered,
+        taken_inputs_from_elders=payload.taken_inputs_from_elders,
+        interested_in_games=payload.interested_in_games,
+        interested_book_types=payload.interested_book_types,
+        salary_range_expected=payload.salary_range_expected,
+        in_realtionship=payload.in_realtionship,
+        behaviour=payload.behaviour,
+        management_or_technical=payload.management_or_technical,
+        worker_type=payload.worker_type,
+        team_work=payload.team_work,
+        instrovert=payload.instrovert,
+    )
+
+    response_data_id = uuid.uuid4()
+
+    try:
+        ml_request_id = ml_request_service.create_ml_request(
+            user_id,
+            balance_id,
+            ml_model_id,
+            response_data_id,
+            input_data_create_entity,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    publish(
+        queue=RABBITMQ_QUEUE,
+        message={
+            "request_id": str(ml_request_id),
+            "ml_model_id": str(ml_model_id),
+            "payload": payload.dict(),
+            "response_data_id": str(response_data_id),
+        },
+    )
+    return {"request_id": str(ml_request_id), "status": "queued"}
+
+
+@app.get("/prediction")
+def get_prediction(user: user_dependency, ml_request_id: uuid.UUID) -> None:
+    user_id = ml_request_service.get_user_id(ml_request_id)
+    if user_id != uuid.UUID(user["user_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User does not have access."
+        )
+    ml_request_status = ml_request_service.get_ml_request_status(ml_request_id)
+    if ml_request_status == Status.FAILED:
+        raise HTTPException(status_code=404, detail="Prediction failed")
+    
+    if ml_request_status == Status.RUNNING or ml_request_status == Status.QUEUED:
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    prediction = ml_request_service.get_prediction(ml_request_id)
+    return {"prediction": prediction.job_role_result}
 
 
 @app.get("/", response_model=dict[str, str])
