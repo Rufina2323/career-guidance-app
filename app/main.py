@@ -5,10 +5,15 @@ import uuid
 from create_entites.inference_data.impl.career_prediction_model_inference_data import (
     CareerPredictionModelInferenceDataCreateEntity,
 )
+from dtos.deposit_request_dto import DepositRequestDTO
 from dtos.inference_data_dto import InferenceDataDTO
-from dtos.update_balance_dto import UpdateBalanceDTO
+from dtos.ml_model_dto import MLModelDTO
+from dtos.ml_request_dto import MLRequestDTO
+from dtos.response_data_dto import ResponseDataDTO
 from dtos.token import Token
 from dtos.register_person_dto import RegisterPersonDTO, RegisterRole
+from dtos.transaction_dto import TransactionDTO
+from dtos.person_dto import PersonDTO
 from fastapi import FastAPI, HTTPException, Request, Depends, Response
 from fastapi.responses import JSONResponse
 
@@ -18,6 +23,8 @@ from entities.person.impl.user import User
 from models.ml_request import Status
 from services.admin_service import AdminService
 from services.balance_service import BalanceService
+from services.deposit_request_service import DepositRequestService
+from services.ml_model_service import MLModelService
 from services.ml_request_service import MLRequestService
 import uvicorn
 import logging
@@ -62,6 +69,8 @@ balance_service = BalanceService()
 user_service = UserService()
 admin_service = AdminService()
 transaction_service = TransactionService()
+ml_model_service = MLModelService()
+deposit_request_service = DepositRequestService()
 
 
 @app.post("/auth", status_code=status.HTTP_201_CREATED)
@@ -91,8 +100,14 @@ def register(register_person_dto: RegisterPersonDTO) -> dict[str, str]:
 def login_for_access_token(user_login: Annotated[OAuth2PasswordRequestForm, Depends()]):
     person = user_service.authenticate_person(user_login.username, user_login.password)
     if person:
+        person_role = user_service.get_person_role(person.user_id)
         expired = datetime.datetime.now(datetime.UTC) + timedelta(minutes=20)
-        encode = {"sub": person.username, "id": str(person.user_id), "exp": expired}
+        encode = {
+            "sub": person.username,
+            "role": person_role,
+            "id": str(person.user_id),
+            "exp": expired,
+        }
         token = jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
         return {"access_token": token, "token_type": "bearer"}
     raise HTTPException(
@@ -106,13 +121,13 @@ async def get_current_user(token: Annotated[str, Depends(oath2_bearer)]):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         user_id: str = payload.get("id")
-        print(username, user_id)
+        user_role: str = payload.get("role")
         if username is None or user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate user.",
             )
-        return {"username": username, "user_id": user_id}
+        return {"username": username, "user_id": user_id, "role": user_role}
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user."
@@ -120,6 +135,11 @@ async def get_current_user(token: Annotated[str, Depends(oath2_bearer)]):
 
 
 user_dependency = Annotated[dict, Depends(get_current_user)]
+
+
+@app.get("/role")
+def get_role(user: user_dependency) -> dict[str, str]:
+    return {"role": user["role"]}
 
 
 @app.get("/balance")
@@ -138,56 +158,151 @@ def get_balance(user: user_dependency) -> dict[str, float]:
     return {"balance": balance.amount}
 
 
-@app.put("/admin/balance", status_code=status.HTTP_200_OK)
-def update_balance(
-    user: user_dependency, user_id: uuid.UUID, update_balance_dto: UpdateBalanceDTO
-) -> None:
+@app.post("/deposit_request", status_code=status.HTTP_200_OK)
+def request_deposit(user: user_dependency, amount: float) -> dict[str, str]:
+    person_id = uuid.UUID(user["user_id"])
+    person = admin_service.get_person(person_id)
+    if not person:
+        person = user_service.get_person(person_id)
+        if not person:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate user.",
+            )
+    deposit_request = user_service.request_deposit(person_id, amount)
+    return {
+        "deposit request": str(deposit_request.deposit_id),
+        "deposit amount": str(deposit_request.amount),
+    }
+
+
+@app.get("/admin/deposit_requests", status_code=status.HTTP_200_OK)
+def get_deposit_requests(user: user_dependency) -> list[DepositRequestDTO]:
     person = admin_service.get_person(uuid.UUID(user["user_id"]))
     if not person:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate admin."
         )
-    if not user_service.get_person(user_id):
+    queued_deposit_requests = admin_service.get_queued_deposit_requests()
+    return [
+        DepositRequestDTO(
+            deposit_id=queued_deposit_request.deposit_id,
+            amount=queued_deposit_request.amount,
+            timestamp=queued_deposit_request.timestamp,
+            username=user_service.get_person(queued_deposit_request.person_id).username,
+        )
+        for queued_deposit_request in queued_deposit_requests
+    ]
+
+
+@app.put("/admin/balance", status_code=status.HTTP_200_OK)
+def update_balance(user: user_dependency, deposit_request_id: uuid.UUID) -> None:
+    admin = admin_service.get_person(uuid.UUID(user["user_id"]))
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate admin."
+        )
+    deposit_request = deposit_request_service.get_deposit_request(deposit_request_id)
+    if not user_service.get_person(deposit_request.person_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User does not exist."
         )
 
     try:
-        admin_service.deposit_to_user(user_id, update_balance_dto.amount)
+        admin_service.deposit_to_user(deposit_request.person_id, deposit_request.amount)
+        admin_service.complete_deposit_request(deposit_request_id)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-def get_transaction_history(user_id: uuid.UUID) -> list[str]:
-    user = user_service.get_person(user_id)
-    if not user:
+@app.put("/admin/balance_deposit_reject", status_code=status.HTTP_200_OK)
+def reject_balance_deposit(
+    user: user_dependency, deposit_request_id: uuid.UUID
+) -> None:
+    admin = admin_service.get_person(uuid.UUID(user["user_id"]))
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate admin."
+        )
+    deposit_request = deposit_request_service.get_deposit_request(deposit_request_id)
+    if not user_service.get_person(deposit_request.person_id):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="User does not exist."
         )
+
+    try:
+        admin_service.reject_deposit_request(deposit_request_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@app.get("/admin/all_users", status_code=status.HTTP_200_OK)
+def get_all_users(user: user_dependency) -> list[PersonDTO]:
+    admin = admin_service.get_person(uuid.UUID(user["user_id"]))
+    if not admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate admin."
+        )
+    users = admin_service.get_all_users()
+    users_dto = []
+    for user in users:
+        user_id = user_service.get_user_id_by_username(user.username)
+        users_dto.append(
+            PersonDTO(
+                username=user.username,
+                role=user_service.get_person_role(user_id),
+                user_id=user_id,
+            )
+        )
+    return users_dto
+
+
+@app.get("/admin/transaction_history")
+def get_user_transaction_history_for_admin(
+    user: user_dependency, user_id: uuid.UUID
+) -> list[TransactionDTO]:
+    person = admin_service.get_person(uuid.UUID(user["user_id"]))
+    if not person:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate admin."
+        )
+
+    return get_transaction_history(user_id=user_id)
+
+
+def get_transaction_history(user_id: uuid.UUID) -> list[TransactionDTO]:
+    user = user_service.get_person(user_id)
+    if not user:
+        user = admin_service.get_person(user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="User does not exist."
+            )
 
     balance_id = user_service.get_user_balance_id(user_id)
     transaction_history = transaction_service.get_transaction_history(balance_id)
 
     result = []
     for transaction in transaction_history:
-        transaction_string = (
-            "transaction.amount"
-            + str(transaction.amount)
-            + "transaction.timestamp"
-            + str(transaction.timestamp)
-        )
         if hasattr(transaction, "ml_request"):
-            transaction_string = "ml_request, " + transaction_string
+            transaction_type = "ml_request"
         else:
-            transaction_string = "deposit, " + transaction_string
-        result.append(transaction_string)
+            transaction_type = "deposit"
+
+        result.append(
+            TransactionDTO(
+                transaction_type=transaction_type,
+                amount=transaction.amount,
+                timestamp=transaction.timestamp,
+            )
+        )
     return result
 
 
 @app.get("/admin/transaction_history")
 def get_user_transaction_history_for_admin(
     user: user_dependency, user_id: uuid.UUID
-) -> list[str]:
+) -> list[TransactionDTO]:
     person = admin_service.get_person(uuid.UUID(user["user_id"]))
     if not person:
         raise HTTPException(
@@ -198,28 +313,80 @@ def get_user_transaction_history_for_admin(
 
 
 @app.get("/transaction_history")
-def get_user_transaction_history(user: user_dependency) -> list[str]:
+def get_user_transaction_history(user: user_dependency) -> list[TransactionDTO]:
     return get_transaction_history(user_id=uuid.UUID(user["user_id"]))
 
 
+@app.get("/all_ml_models")
+def get_all_ml_models(user: user_dependency) -> list[MLModelDTO]:
+    ml_models = ml_model_service.get_all_ml_models()
+    return [
+        MLModelDTO(id=m.model_id, name=m.name, cost=m.request_cost) for m in ml_models
+    ]
+
+
 @app.get("/ml_request_history")
-def get_ml_request_history(user: user_dependency) -> list[str]:
+def get_ml_request_history(user: user_dependency) -> list[MLRequestDTO]:
     ml_request_history = ml_request_service.get_ml_request_history(
         uuid.UUID(user["user_id"])
     )
 
     result = []
     for ml_request in ml_request_history:
-        ml_request_string = (
-            "ml_request.timestamp"
-            + str(ml_request.timestamp)
-            + "ml_request.person.username"
-            + str(ml_request.person.username)
-            + "ml_request.response_data"
-            + str(ml_request.response_data)
+        inference_data = InferenceDataDTO(
+            operating_systems_percentage=ml_request.inference_data.operating_systems_percentage,
+            algorithms_percentage=ml_request.inference_data.algorithms_percentage,
+            programming_concepts_percentage=ml_request.inference_data.programming_concepts_percentage,
+            computer_networks_percentage=ml_request.inference_data.computer_networks_percentage,
+            software_engineering_percentage=ml_request.inference_data.software_engineering_percentage,
+            electronics_subjects_percentage=ml_request.inference_data.electronics_subjects_percentage,
+            computer_architecture_percentage=ml_request.inference_data.computer_architecture_percentage,
+            mathematics_percentage=ml_request.inference_data.mathematics_percentage,
+            communication_skills_percentage=ml_request.inference_data.communication_skills_percentage,
+            hours_working_per_day=ml_request.inference_data.hours_working_per_day,
+            logical_quotient_rating=ml_request.inference_data.logical_quotient_rating,
+            hackathons=ml_request.inference_data.hackathons,
+            coding_skills_rating=ml_request.inference_data.coding_skills_rating,
+            public_speaking_points=ml_request.inference_data.public_speaking_points,
+            can_work_long_time=ml_request.inference_data.can_work_long_time,
+            self_learning_capability=ml_request.inference_data.self_learning_capability,
+            extra_courses_did=ml_request.inference_data.extra_courses_did,
+            certifications=ml_request.inference_data.certifications,
+            workshops=ml_request.inference_data.workshops,
+            talent_tests_taken=ml_request.inference_data.talent_tests_taken,
+            olympiads=ml_request.inference_data.olympiads,
+            reading_writing_skills=ml_request.inference_data.reading_writing_skills,
+            memory_capability_score=ml_request.inference_data.memory_capability_score,
+            interested_subjects=ml_request.inference_data.interested_subjects,
+            interested_career_area=ml_request.inference_data.interested_career_area,
+            job_higher_studies=ml_request.inference_data.job_higher_studies,
+            company_type_prefered=ml_request.inference_data.company_type_prefered,
+            taken_inputs_from_elders=ml_request.inference_data.taken_inputs_from_elders,
+            interested_in_games=ml_request.inference_data.interested_in_games,
+            interested_book_types=ml_request.inference_data.interested_book_types,
+            salary_range_expected=ml_request.inference_data.salary_range_expected,
+            in_realtionship=ml_request.inference_data.in_realtionship,
+            behaviour=ml_request.inference_data.behaviour,
+            management_or_technical=ml_request.inference_data.management_or_technical,
+            worker_type=ml_request.inference_data.worker_type,
+            team_work=ml_request.inference_data.team_work,
+            introvert=ml_request.inference_data.introvert,
         )
 
-        result.append(ml_request_string)
+        response_data = ResponseDataDTO(
+            job_role_result=ml_request.response_data.job_role_result
+        )
+
+        result.append(
+            MLRequestDTO(
+                ml_model_name=ml_request.ml_model.name,
+                ml_model_request_cost=ml_request.ml_model.request_cost,
+                inference_data=inference_data,
+                response_data=response_data,
+                status=ml_request.status,
+                timestamp=ml_request.timestamp,
+            )
+        )
     return result
 
 
@@ -238,6 +405,7 @@ def create_ml_request(
         operating_systems_percentage=payload.operating_systems_percentage,
         algorithms_percentage=payload.algorithms_percentage,
         programming_concepts_percentage=payload.programming_concepts_percentage,
+        computer_networks_percentage=payload.computer_networks_percentage,
         software_engineering_percentage=payload.software_engineering_percentage,
         electronics_subjects_percentage=payload.electronics_subjects_percentage,
         computer_architecture_percentage=payload.computer_architecture_percentage,
@@ -270,7 +438,7 @@ def create_ml_request(
         management_or_technical=payload.management_or_technical,
         worker_type=payload.worker_type,
         team_work=payload.team_work,
-        instrovert=payload.instrovert,
+        introvert=payload.introvert,
     )
 
     response_data_id = uuid.uuid4()
@@ -299,7 +467,7 @@ def create_ml_request(
 
 
 @app.get("/prediction")
-def get_prediction(user: user_dependency, ml_request_id: uuid.UUID) -> None:
+def get_prediction(user: user_dependency, ml_request_id: uuid.UUID) -> dict[str, str]:
     user_id = ml_request_service.get_user_id(ml_request_id)
     if user_id != uuid.UUID(user["user_id"]):
         raise HTTPException(
@@ -308,7 +476,7 @@ def get_prediction(user: user_dependency, ml_request_id: uuid.UUID) -> None:
     ml_request_status = ml_request_service.get_ml_request_status(ml_request_id)
     if ml_request_status == Status.FAILED:
         raise HTTPException(status_code=404, detail="Prediction failed")
-    
+
     if ml_request_status == Status.RUNNING or ml_request_status == Status.QUEUED:
         return Response(status_code=status.HTTP_204_NO_CONTENT)
 
