@@ -1,4 +1,3 @@
-from entities.person.impl.user import User
 from repositories.person.user.impl.user_psql_repository import UserPSQLRepository
 from repositories.person.repository import PersonRepository
 from services.person_service import PersonService
@@ -9,6 +8,3 @@ class UserService(PersonService):
         super().__init__()
 
         self.person_repository: PersonRepository = UserPSQLRepository()
-
-    def request_deposit(self, user: User, amount: float) -> None:
-        pass
