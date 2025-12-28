@@ -27,12 +27,10 @@ def upgrade() -> None:
     op.create_table(
         "ml_model",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("name", sa.VARCHAR(), nullable=False),
         sa.Column("request_cost", sa.Float(), nullable=False),
-        sa.Column("model_path", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "preprocessing_path", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("model_path", sa.VARCHAR(), nullable=False),
+        sa.Column("preprocessing_path", sa.VARCHAR(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

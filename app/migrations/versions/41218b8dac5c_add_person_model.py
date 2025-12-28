@@ -27,9 +27,9 @@ def upgrade() -> None:
     op.create_table(
         "person",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("username", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("password_hash", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("username", sa.VARCHAR(), nullable=False),
+        sa.Column("email", sa.VARCHAR(), nullable=False),
+        sa.Column("password_hash", sa.VARCHAR(), nullable=False),
         sa.Column("role", sa.Enum("USER", "ADMIN", name="role"), nullable=False),
         sa.Column("balance_id", sa.UUID(), nullable=True),
         sa.ForeignKeyConstraint(["balance_id"], ["balance.id"], name="fk_balance_id"),

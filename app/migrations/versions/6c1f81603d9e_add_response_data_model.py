@@ -27,9 +27,7 @@ def upgrade() -> None:
     op.create_table(
         "response_data",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column(
-            "job_role_result", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("job_role_result", sa.VARCHAR(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

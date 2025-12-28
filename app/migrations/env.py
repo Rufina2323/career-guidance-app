@@ -14,6 +14,7 @@ from models import (
     deposit_transaction,
     ml_request,
     ml_request_transaction,
+    deposit_request,
 )
 
 from config.psql import POSTGRES_DB_URL
