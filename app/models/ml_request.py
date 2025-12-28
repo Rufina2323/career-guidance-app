@@ -13,13 +13,12 @@ if TYPE_CHECKING:
     from models.ml_model import MLModel
 
 
-
 class Status(str, Enum):
     QUEUED = "queued"
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-    
+
 
 class MLRequest(SQLModel, table=True):
     __tablename__ = "ml_request"
