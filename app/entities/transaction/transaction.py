@@ -5,7 +5,6 @@ from datetime import datetime
 from entities.balance import Balance
 
 
-# TODO: rename amount
 @dataclass
 class Transaction(ABC):
     balance: Balance

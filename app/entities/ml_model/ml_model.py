@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+import uuid
 import torch
 
 
 @dataclass(kw_only=True)
 class MLModel(ABC):
-    model_id: int
+    model_id: uuid.UUID
     name: str
     request_cost: float
     model_path: str
