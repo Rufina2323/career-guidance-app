@@ -23,9 +23,7 @@ def test_get_ml_model_request_cost_success(
 
         result = ml_model_psql_repository.get_ml_model_request_cost(ml_model_id)
 
-        expected_statement = select(MLModelModel).where(
-            MLModelModel.id == ml_model_id
-        )
+        expected_statement = select(MLModelModel).where(MLModelModel.id == ml_model_id)
         used_statement = mock_session.exec.call_args.args[0]
 
         assert expected_statement.compare(used_statement)

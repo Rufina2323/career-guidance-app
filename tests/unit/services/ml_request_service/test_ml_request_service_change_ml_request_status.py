@@ -8,6 +8,8 @@ def test_change_ml_request_status(ml_request_service: MLRequestService) -> None:
     ml_request_id = uuid4()
     status = Status.COMPLETED
 
-    with patch.object(ml_request_service.ml_request_repository, "change_ml_request_status") as mock_change_status:
+    with patch.object(
+        ml_request_service.ml_request_repository, "change_ml_request_status"
+    ) as mock_change_status:
         ml_request_service.change_ml_request_status(ml_request_id, status)
         mock_change_status.assert_called_once_with(ml_request_id, status)

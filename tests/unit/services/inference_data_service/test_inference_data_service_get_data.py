@@ -1,7 +1,9 @@
 from uuid import uuid4
 from unittest.mock import patch
 
-from entities.inference_data.impl.career_prediction_model_inference_data import CareerPredictionModelInferenceData
+from entities.inference_data.impl.career_prediction_model_inference_data import (
+    CareerPredictionModelInferenceData,
+)
 import pytest
 
 from services.inference_data_service import InferenceDataService
@@ -13,6 +15,7 @@ def test_get_data(inference_data_service: InferenceDataService) -> None:
         operating_systems_percentage=0,
         algorithms_percentage=0,
         programming_concepts_percentage=0,
+        computer_networks_percentage=0,
         software_engineering_percentage=0,
         electronics_subjects_percentage=0,
         computer_architecture_percentage=0,
@@ -45,7 +48,7 @@ def test_get_data(inference_data_service: InferenceDataService) -> None:
         management_or_technical="Management",
         worker_type="hard worker",
         team_work="yes",
-        instrovert=True
+        introvert=True,
     )
 
     with patch.object(

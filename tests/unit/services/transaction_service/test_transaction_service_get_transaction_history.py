@@ -16,9 +16,18 @@ def test_get_transaction_history(transaction_service: TransactionService) -> Non
     t2.timestamp = 20
     t3.timestamp = 15
 
-    with patch.object(transaction_service.ml_request_transaction_repository, "get_all_transactions", return_value=[t1, t2]) as mock_ml, \
-         patch.object(transaction_service.deposit_transaction_repository, "get_all_transactions", return_value=[t3]) as mock_deposit:
-
+    with (
+        patch.object(
+            transaction_service.ml_request_transaction_repository,
+            "get_all_transactions",
+            return_value=[t1, t2],
+        ) as mock_ml,
+        patch.object(
+            transaction_service.deposit_transaction_repository,
+            "get_all_transactions",
+            return_value=[t3],
+        ) as mock_deposit,
+    ):
         result = transaction_service.get_transaction_history(balance_id)
 
         mock_ml.assert_called_once_with(balance_id)

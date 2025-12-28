@@ -13,7 +13,9 @@ def test_deposit_to_user(admin_service: AdminService) -> None:
 
     with (
         patch.object(admin_service, "get_user_balance_id") as mock_get_user_balance_id,
-        patch.object(admin_service.balance_service, "deposit") as mock_balance_service_deposit,
+        patch.object(
+            admin_service.balance_service, "deposit"
+        ) as mock_balance_service_deposit,
     ):
         mock_get_user_balance_id.return_value = balance_id
 
@@ -28,7 +30,9 @@ def test_deposit_to_user_balance_not_found(admin_service: AdminService) -> None:
 
     with (
         patch.object(admin_service, "get_user_balance_id") as mock_get_user_balance_id,
-        patch.object(admin_service.balance_service, "deposit") as mock_balance_service_deposit,
+        patch.object(
+            admin_service.balance_service, "deposit"
+        ) as mock_balance_service_deposit,
     ):
         mock_get_user_balance_id.return_value = None
 
