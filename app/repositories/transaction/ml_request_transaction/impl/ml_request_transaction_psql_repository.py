@@ -65,7 +65,7 @@ class MLRequestTransactionPSQLRepository(
                     tx.ml_request.inference_data
                 )
                 response_data = CareerPredictionModelResponseData(
-                    job_role_result=tx.ml_request.response_data
+                    job_role_result=tx.ml_request.response_data.job_role_result
                 )
 
                 ml_request_transactions.append(

@@ -42,7 +42,9 @@ class MLRequestPSQLRepository(MLRequestRepository):
             session.commit()
             return ml_request_model.id
 
-    def change_ml_request_status(self, ml_request_id: uuid.UUID, ml_request_status: Status) -> None:
+    def change_ml_request_status(
+        self, ml_request_id: uuid.UUID, ml_request_status: Status
+    ) -> None:
         with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
@@ -55,13 +57,13 @@ class MLRequestPSQLRepository(MLRequestRepository):
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.response_data_id
-        
+
     def get_ml_request_status(self, ml_request_id: uuid.UUID) -> Status:
         with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
             psql_ml_request = session.exec(statement).first()
             return psql_ml_request.status
-        
+
     def get_ml_request_cost(self, ml_request_id: uuid.UUID) -> float:
         with self.session_maker(engine) as session:
             statement = select(MLRequestModel).where(MLRequestModel.id == ml_request_id)
@@ -91,7 +93,7 @@ class MLRequestPSQLRepository(MLRequestRepository):
                 )
                 inference_data = InferenceDataModel.to_domain(ml_request.inference_data)
                 response_data = CareerPredictionModelResponseData(
-                    job_role_result=ml_request.response_data
+                    job_role_result=ml_request.response_data.job_role_result
                 )
                 ml_requests.append(
                     MLRequest(
