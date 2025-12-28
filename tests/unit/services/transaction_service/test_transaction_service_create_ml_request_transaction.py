@@ -9,6 +9,10 @@ def test_create_ml_request_transaction(transaction_service: TransactionService) 
     balance_id = uuid4()
     amount = 50.0
 
-    with patch.object(transaction_service.ml_request_transaction_repository, "create_transaction") as mock_create:
-        transaction_service.create_ml_request_transaction(ml_request_id, balance_id, amount)
+    with patch.object(
+        transaction_service.ml_request_transaction_repository, "create_transaction"
+    ) as mock_create:
+        transaction_service.create_ml_request_transaction(
+            ml_request_id, balance_id, amount
+        )
         mock_create.assert_called_once_with(ml_request_id, balance_id, amount)

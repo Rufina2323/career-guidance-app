@@ -11,7 +11,7 @@ from entities.ml_model.ml_model import MLModel
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim=123, hidden_dim=50, num_classes=11):
+    def __init__(self, input_dim=105, hidden_dim=50, num_classes=11):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
@@ -43,9 +43,8 @@ class CareerPredictionModel(MLModel):
 
     def initialize_model(self) -> torch.nn.Module:
         try:
-            model = MLP(input_dim=123, num_classes=11)
+            model = MLP(input_dim=105, num_classes=11)
             model.load_state_dict(torch.load(self.model_path))
-            print(self.model_path)
             return model
         except FileNotFoundError:
             raise FileNotFoundError(f"Model file not found: {self.model_path}")
@@ -55,7 +54,6 @@ class CareerPredictionModel(MLModel):
     def initialize_preprocessing(self) -> ColumnTransformer:
         try:
             preprocessor = joblib.load(self.preprocessing_path)
-            print(self.preprocessing_path)
             return preprocessor
         except FileNotFoundError:
             raise FileNotFoundError(
@@ -67,7 +65,6 @@ class CareerPredictionModel(MLModel):
     def initialize_label_encoder(self) -> LabelEncoder:
         try:
             label_encoder = joblib.load(self.label_encoder_path)
-            print(self.label_encoder_path)
             return label_encoder
         except FileNotFoundError:
             raise FileNotFoundError(

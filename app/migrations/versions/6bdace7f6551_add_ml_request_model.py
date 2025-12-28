@@ -27,7 +27,7 @@ def upgrade() -> None:
     op.create_table(
         "ml_request",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("status", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("status", sa.VARCHAR(), nullable=False),
         sa.Column("timestamp", sa.DateTime(), nullable=False),
         sa.Column("credits_used", sa.Float(), nullable=False),
         sa.Column("user_id", sa.UUID(), nullable=True),

@@ -4,7 +4,9 @@ from unittest.mock import patch, MagicMock
 from repositories.inference_data.impl.inference_data_psql_repository import (
     InferenceDataPSQLRepository,
 )
-from create_entites.inference_data.impl.career_prediction_model_inference_data import CareerPredictionModelInferenceDataCreateEntity
+from create_entites.inference_data.impl.career_prediction_model_inference_data import (
+    CareerPredictionModelInferenceDataCreateEntity,
+)
 from models.inference_data import InferenceData as InferenceDataModel
 
 
@@ -15,6 +17,7 @@ def test_add_data(inference_data_psql_repository: InferenceDataPSQLRepository) -
         operating_systems_percentage=1,
         algorithms_percentage=2,
         programming_concepts_percentage=3,
+        computer_networks_percentage=2,
         software_engineering_percentage=4,
         electronics_subjects_percentage=0,
         computer_architecture_percentage=0,
@@ -47,7 +50,7 @@ def test_add_data(inference_data_psql_repository: InferenceDataPSQLRepository) -
         management_or_technical="Management",
         worker_type="hard worker",
         team_work="yes",
-        instrovert=True
+        introvert=True,
     )
 
     with patch.object(
@@ -63,7 +66,6 @@ def test_add_data(inference_data_psql_repository: InferenceDataPSQLRepository) -
             "repositories.inference_data.impl.inference_data_psql_repository.InferenceDataModel",
             return_value=mock_model,
         ) as mock_model_cls:
-
             result = inference_data_psql_repository.add_data(inference_data)
 
             mock_model_cls.assert_called_once()

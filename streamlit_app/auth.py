@@ -1,5 +1,5 @@
 import streamlit as st
-from api import register_user, login
+from api import register_user, login, get_role
 
 
 def auth_page():
@@ -15,7 +15,10 @@ def auth_page():
             r = login(username, password)
             if r.status_code == 200:
                 st.session_state.token = r.json()["access_token"]
-                st.success("Logged in successfully")
+                st.session_state.user_role = get_role(st.session_state.token).json()[
+                    "role"
+                ]
+                st.success(f"Logged in successfully, {st.session_state.user_role}")
             else:
                 st.error(r.text)
 
@@ -24,7 +27,6 @@ def auth_page():
         username = st.text_input("New Username")
         email = st.text_input("Email")
         password = st.text_input("New Password", type="password")
-        role = st.selectbox("Role", ["user", "admin"])
 
         if st.button("Register"):
             r = register_user(
@@ -32,7 +34,7 @@ def auth_page():
                     "username": username,
                     "email": email,
                     "password": password,
-                    "role": role,
+                    "role": "user",
                 }
             )
             if r.status_code == 201:

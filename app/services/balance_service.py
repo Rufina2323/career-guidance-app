@@ -21,15 +21,15 @@ class BalanceService:
         balance = self.balance_repository.get_balance(balance_id)
         return balance
 
-    # TODO: Rewrite to bool
-    def can_withdraw(self, balance_id: uuid.UUID, amount: float) -> None:
+    def can_withdraw(self, balance_id: uuid.UUID, amount: float) -> tuple[bool, str]:
         if amount <= 0:
-            raise ValueError("Withdrawal amount must be positive.")
+            return (False, "Withdrawal amount must be positive.")
         balance = self.get_balance(balance_id)
         if not balance:
-            raise ValueError("Balance does not exist.")
+            return (False, "Balance does not exist.")
         if amount > balance.amount:
-            raise ValueError("Insufficient balance.")
+            return (False, "Insufficient balance.")
+        return (True, "Amount can be withdraw from balance.")
 
     def withdraw(
         self, ml_request_id: uuid.UUID, balance_id: uuid.UUID, amount: float

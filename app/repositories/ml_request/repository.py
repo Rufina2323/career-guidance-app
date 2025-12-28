@@ -18,17 +18,19 @@ class MLRequestRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def change_ml_request_status(self, ml_request_id: uuid.UUID, ml_request_status: Status) -> None:
+    def change_ml_request_status(
+        self, ml_request_id: uuid.UUID, ml_request_status: Status
+    ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     def get_prediction_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_ml_request_status(self, ml_request_id: uuid.UUID) -> Status:
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_ml_request_cost(self, ml_request_id: uuid.UUID) -> float:
         raise NotImplementedError

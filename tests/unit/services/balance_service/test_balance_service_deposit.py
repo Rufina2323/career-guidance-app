@@ -11,7 +11,9 @@ def test_deposit_success(balance_service: BalanceService) -> None:
     amount = 100.0
 
     with (
-        patch.object(balance_service.balance_repository, "deposit") as mock_repo_deposit,
+        patch.object(
+            balance_service.balance_repository, "deposit"
+        ) as mock_repo_deposit,
         patch.object(
             balance_service.transaction_service,
             "create_deposit_transaction",

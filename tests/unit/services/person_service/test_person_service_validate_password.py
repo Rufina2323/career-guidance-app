@@ -10,7 +10,10 @@ from services.user_service import UserService
         ("nouppercase1!", ["Password must contain at least one uppercase letter."]),
         ("NOLOWERCASE1!", ["Password must contain at least one lowercase letter."]),
         ("NoDigits!", ["Password must contain at least one digit."]),
-        ("NoSpecial1", ["Password must contain at least one special character (!@#$%^&* etc)."]),
+        (
+            "NoSpecial1",
+            ["Password must contain at least one special character (!@#$%^&* etc)."],
+        ),
         ("Vaalid1!", []),
     ],
 )

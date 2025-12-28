@@ -13,17 +13,22 @@ def callback(ch, method, properties, body):
     ml_request_service = MLRequestService()
 
     try:
-        ml_request_service.change_ml_request_status(ml_request_id=data["request_id"], ml_request_status=Status.RUNNING)
+        ml_request_service.change_ml_request_status(
+            ml_request_id=data["request_id"], ml_request_status=Status.RUNNING
+        )
         prediction = ml_model_service.predict(
             uuid.UUID(data["ml_model_id"]),
             uuid.UUID(data["response_data_id"]),
             data["payload"],
         )
-        print(prediction, flush=True)
-        ml_request_service.change_ml_request_status(ml_request_id=data["request_id"], ml_request_status=Status.COMPLETED)
+        ml_request_service.change_ml_request_status(
+            ml_request_id=data["request_id"], ml_request_status=Status.COMPLETED
+        )
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
-        ml_request_service.change_ml_request_status(ml_request_id=data["request_id"], ml_request_status=Status.FAILED)
+        ml_request_service.change_ml_request_status(
+            ml_request_id=data["request_id"], ml_request_status=Status.FAILED
+        )
         ml_request_service.fail_ml_request(ml_request_id=data["request_id"])
         print("Error:", e)
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

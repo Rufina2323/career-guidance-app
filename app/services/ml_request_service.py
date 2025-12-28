@@ -35,7 +35,9 @@ class MLRequestService:
         inference_data: InferenceDataCreateEntity,
     ) -> uuid.UUID:
         model_cost = self.ml_model_service.get_ml_model_request_cost(model_id)
-        self.balance_service.can_withdraw(balance_id, model_cost)
+        verdict, message = self.balance_service.can_withdraw(balance_id, model_cost)
+        if not verdict:
+            raise ValueError(message)
 
         inference_data_id = self.inference_data_service.add_data(inference_data)
         self.response_data_service.add_data(
@@ -48,20 +50,23 @@ class MLRequestService:
 
         self.balance_service.withdraw(ml_request_id, balance_id, model_cost)
         return ml_request_id
-    
+
     def fail_ml_request(self, ml_request_id: uuid.UUID) -> None:
         user_id = self.ml_request_repository.get_user_id(ml_request_id)
         balance_id = self.user_service.get_user_balance_id(user_id)
         model_cost = self.ml_request_repository.get_ml_request_cost(ml_request_id)
         self.balance_service.deposit(balance_id, model_cost)
 
-
-    def change_ml_request_status(self, ml_request_id: uuid.UUID, ml_request_status: Status) -> None:
-        self.ml_request_repository.change_ml_request_status(ml_request_id, ml_request_status)
+    def change_ml_request_status(
+        self, ml_request_id: uuid.UUID, ml_request_status: Status
+    ) -> None:
+        self.ml_request_repository.change_ml_request_status(
+            ml_request_id, ml_request_status
+        )
 
     def get_user_id(self, ml_request_id: uuid.UUID) -> uuid.UUID:
         return self.ml_request_repository.get_user_id(ml_request_id)
-    
+
     def get_ml_request_status(self, ml_request_id: uuid.UUID) -> Status:
         return self.ml_request_repository.get_ml_request_status(ml_request_id)
 

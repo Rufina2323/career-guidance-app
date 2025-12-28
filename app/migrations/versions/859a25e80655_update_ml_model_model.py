@@ -28,7 +28,7 @@ def upgrade() -> None:
         "ml_model",
         sa.Column(
             "label_encoder_path",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.VARCHAR(),
             nullable=False,
             server_default="",
         ),

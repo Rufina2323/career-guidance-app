@@ -1,7 +1,9 @@
 from uuid import uuid4
 from unittest.mock import patch
 
-from entities.response_data.impl.career_prediction_model_response_data import CareerPredictionModelResponseData
+from entities.response_data.impl.career_prediction_model_response_data import (
+    CareerPredictionModelResponseData,
+)
 from services.response_data_service import ResponseDataService
 
 

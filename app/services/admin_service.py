@@ -1,4 +1,6 @@
 import uuid
+from entities.deposit_request import DepositRequest
+from models.deposit_request import DepositStatus
 from repositories.person.admin.impl.admin_psql_repository import AdminPSQLRepository
 from repositories.person.repository import PersonRepository
 from services.person_service import PersonService
@@ -16,3 +18,16 @@ class AdminService(PersonService):
             raise ValueError("User does not exist.")
 
         self.balance_service.deposit(balance_id, amount)
+
+    def get_queued_deposit_requests(self) -> list[DepositRequest]:
+        return self.deposit_request_service.get_queued_deposit_requests()
+
+    def complete_deposit_request(self, deposit_request_id: uuid.UUID) -> None:
+        self.deposit_request_service.update_deposit_request_status(
+            deposit_request_id, DepositStatus.COMPLETED
+        )
+
+    def reject_deposit_request(self, deposit_request_id: uuid.UUID) -> None:
+        self.deposit_request_service.update_deposit_request_status(
+            deposit_request_id, DepositStatus.REJECTED
+        )

@@ -16,6 +16,7 @@ from sqlalchemy import ForeignKey, Column, UUID as SA_UUID
 if TYPE_CHECKING:
     from models.balance import Balance
     from models.ml_request import MLRequest
+    from models.deposit_request import DepositRequest
 
 
 class Role(str, Enum):
@@ -35,6 +36,7 @@ class Person(SQLModel, table=True):
 
     balance: "Balance" = Relationship(back_populates="person")
     ml_requests: list["MLRequest"] = Relationship(back_populates="person")
+    deposit_requests: list["DepositRequest"] = Relationship(back_populates="person")
 
     @classmethod
     def to_domain(cls, user_model: "Person") -> PersonEntity:

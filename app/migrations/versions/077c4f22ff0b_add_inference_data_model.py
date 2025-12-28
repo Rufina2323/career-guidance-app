@@ -40,69 +40,45 @@ def upgrade() -> None:
         sa.Column("hackathons", sa.Integer(), nullable=False),
         sa.Column("coding_skills_rating", sa.Integer(), nullable=False),
         sa.Column("public_speaking_points", sa.Integer(), nullable=False),
-        sa.Column(
-            "can_work_long_time", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("can_work_long_time", sa.VARCHAR(), nullable=False),
         sa.Column(
             "self_learning_capability",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.VARCHAR(),
             nullable=False,
         ),
-        sa.Column(
-            "extra_courses_did", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("certifications", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("workshops", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "talent_tests_taken", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("olympiads", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "reading_writing_skills", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("extra_courses_did", sa.VARCHAR(), nullable=False),
+        sa.Column("certifications", sa.VARCHAR(), nullable=False),
+        sa.Column("workshops", sa.VARCHAR(), nullable=False),
+        sa.Column("talent_tests_taken", sa.VARCHAR(), nullable=False),
+        sa.Column("olympiads", sa.VARCHAR(), nullable=False),
+        sa.Column("reading_writing_skills", sa.VARCHAR(), nullable=False),
         sa.Column(
             "memory_capability_score",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.VARCHAR(),
             nullable=False,
         ),
-        sa.Column(
-            "interested_subjects", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "interested_career_area", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "job_higher_studies", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "company_type_prefered", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
+        sa.Column("interested_subjects", sa.VARCHAR(), nullable=False),
+        sa.Column("interested_career_area", sa.VARCHAR(), nullable=False),
+        sa.Column("job_higher_studies", sa.VARCHAR(), nullable=False),
+        sa.Column("company_type_prefered", sa.VARCHAR(), nullable=False),
         sa.Column(
             "taken_inputs_from_elders",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.VARCHAR(),
             nullable=False,
         ),
-        sa.Column(
-            "interested_in_games", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "interested_book_types", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "salary_range_expected", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column(
-            "in_realtionship", sqlmodel.sql.sqltypes.AutoString(), nullable=False
-        ),
-        sa.Column("behaviour", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+        sa.Column("interested_in_games", sa.VARCHAR(), nullable=False),
+        sa.Column("interested_book_types", sa.VARCHAR(), nullable=False),
+        sa.Column("salary_range_expected", sa.VARCHAR(), nullable=False),
+        sa.Column("in_realtionship", sa.VARCHAR(), nullable=False),
+        sa.Column("behaviour", sa.VARCHAR(), nullable=False),
         sa.Column(
             "management_or_technical",
-            sqlmodel.sql.sqltypes.AutoString(),
+            sa.VARCHAR(),
             nullable=False,
         ),
-        sa.Column("worker_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("team_work", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("instrovert", sa.Boolean(), nullable=False),
+        sa.Column("worker_type", sa.VARCHAR(), nullable=False),
+        sa.Column("team_work", sa.VARCHAR(), nullable=False),
+        sa.Column("introvert", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     # ### end Alembic commands ###

@@ -45,10 +45,9 @@ def ml_request_service():
 def transaction_service():
     return TransactionService()
 
+
 @pytest.fixture
 def user_service():
     service = UserService()
     service.person_repository = MagicMock()
     return service
-
-

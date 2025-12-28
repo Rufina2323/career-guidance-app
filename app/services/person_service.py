@@ -5,14 +5,17 @@ import re
 
 from create_entites.person.person import PersonCreateEntity
 from create_entites.person_db.person import PersonDBCreateEntity
+from entities.deposit_request import DepositRequest
 from entities.person.person import Person
 from repositories.person.repository import PersonRepository
 from services.balance_service import BalanceService
+from services.deposit_request_service import DepositRequestService
 
 
 class PersonService(ABC):
     def __init__(self) -> None:
         self.balance_service = BalanceService()
+        self.deposit_request_service = DepositRequestService()
 
         self.person_repository: PersonRepository
 
@@ -48,13 +51,13 @@ class PersonService(ABC):
     def get_person(self, person_id: uuid.UUID) -> Person | None:
         return self.person_repository.get_person(person_id)
 
+    def get_person_role(self, person_id: uuid.UUID) -> str:
+        return self.person_repository.get_person_role(person_id)
+
     def authenticate_person(self, username: str, raw_password: str) -> Person | None:
         person = self.person_repository.get_by_username(username)
         if not person:
             return None
-        print(person)
-        print(len(person.password_hash))
-        print(bcrypt.hashpw(raw_password.encode(), bcrypt.gensalt()))
         if not bcrypt.checkpw(
             raw_password.encode(), person.password_hash.encode("utf-8")
         ):
@@ -86,3 +89,12 @@ class PersonService(ABC):
 
     def get_user_balance_id(self, person_id: uuid.UUID) -> uuid.UUID | None:
         return self.person_repository.get_user_balance_id(person_id)
+
+    def request_deposit(self, person_id: uuid.UUID, amount: float) -> DepositRequest:
+        return self.deposit_request_service.add_deposit_request(person_id, amount)
+
+    def get_user_id_by_username(self, username: str) -> uuid.UUID:
+        return self.person_repository.get_user_id_by_username(username)
+
+    def get_all_users(self) -> list[Person]:
+        return self.person_repository.get_all_users()
